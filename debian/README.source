@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# The upstream repository for trained language data is multiple
+# gigabytes in size. I think this crosses the limit for Debian source
+# package size. So instead we package each language individually. This
+# helper script was used last time we needed to update the packages.
+# As such it is only for the package maintainer, and even then just
+# as template for future packaging work.
+
+echo "You should not just run this script blindly."
+exit 1
+
+WORKING=`pwd`
+TESSDATA=/tessdata  # Upstream git repository
+
+function tarball() {
+   mkdir -p /tmp/tesseract-ocr-$1/tessdata
+   N=`echo $1 | sed 's/-/_/'` 
+   cp $TESSDATA/$N.* /tmp/tesseract-ocr-$1/tessdata
+   cd /tmp
+   tar czvf /plang/tesseract-ocr-$1-3.04.00.tar.gz tesseract-ocr-$1/tessdata
+   cd -
+}
+
+function one() {
+   cd $WORKING
+   rm  -rf tesseract-$1* tesseract-ocr-$1*
+   apt-get source tesseract-$1
+   tarball $1
+   cd tesseract-$1-3.02*
+   uupdate -v 3.04.00 ../tesseract-ocr-$1-3.04.00.tar.gz
+   cd -
+   sed -i 's/UNRELEASED/unstable/g' tesseract-$1-3.04.00/debian/changelog
+   sed -i 's/root <root@jbreiden-glaptop>/Jeff Breidenbach <jab@debian.org>/g' tesseract-$1-3.04.00/debian/changelog
+   sed -i 's/3.9.2/3.9.6/g' tesseract-$1-3.04.00/debian/control
+   cp rules tesseract-$1-3.04.00/debian
+   cd tesseract-$1-3.04.00
+   debuild -us -uc
+}
+
+function new() {
+    cd $WORKING
+    rm -rf tesseract-$1* tesseract-ocr-$1*
+    export DEBEMAIL=jab@debian.org
+    export DEBFULLNAME='Jeff Breidenbach'
+    tarball $1
+    tar xvzf tesseract-ocr-$1-3.04.00.tar.gz
+    cd tesseract-ocr-$1
+    dh_make -f ../tesseract-ocr-$1-3.04.00.tar.gz -p tesseract-ocr-$1_3.04.00 -i -y
+    rm debian/*.ex debian/*.EX debian/README.* debian/docs 
+    cp ../compat  ../format  ../rules ../copyright ../control debian
+    sed -i 's/ (Closes: #nnnn)  <nnnn is the bug number of your ITP>//g' debian/changelog
+    sed -i "s/XXX/$1/g" debian/control
+    sed -i "s/YYY/$2/g" debian/control
+    debuild -us -uc
+}
+
+
+LANGS=$(apt-cache search tesseract |\
+               grep ^tesseract-ocr- |\
+	       grep -v ocr-dev |\
+	       cut -f3- -d\- |\
+	       cut -f1 -d' ')
+
+for i in $LANGS; do one $i; done
+
+#new amh Amharic
+#new aze-cyrl 'Azerbaijani \(Cyrillic\)'

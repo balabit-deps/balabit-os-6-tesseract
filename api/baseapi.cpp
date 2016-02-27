@@ -823,6 +823,10 @@ PageIterator* TessBaseAPI::AnalyseLayout(bool merge_similar_words) {
   return NULL;
 }
 
+PageIterator* TessBaseAPI::AnalyseLayout() {
+  return AnalyseLayout(false);
+}
+
 /**
  * Recognize the tesseract global image and return the result as Tesseract
  * internal structures.

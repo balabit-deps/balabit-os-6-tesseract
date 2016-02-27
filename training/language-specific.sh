@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Set some language specific variables. Works in conjunction with
 # tesstrain.sh
@@ -314,9 +315,9 @@ JPN_FONTS=( \
     "TakaoPMincho" \
     "VL Gothic" \
     "VL PGothic" \
-    "Noto Sans Japanese Bold" \
-    "Noto Sans Japanese Light" \
-    )
+    "Noto Sans CJK JP Bold" \
+    "Noto Sans CJK JP Semi-Light" \
+)
 
 RUSSIAN_FONTS=( \
     "Arial Bold" \
